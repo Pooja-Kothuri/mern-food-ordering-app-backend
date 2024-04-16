@@ -37,7 +37,7 @@ export const jwtParse=async (req:Request,res:Response,next:NextFunction)=>{
 
   try{
    const decoded =jwt.decode(token) as jwt.JwtPayload;
-   console.log(decoded);//token
+  // console.log(decoded);//token
    const auth0Id=decoded.sub;
    const user=await  User.findOne({auth0Id});
    if(!user){
@@ -46,7 +46,6 @@ export const jwtParse=async (req:Request,res:Response,next:NextFunction)=>{
    //adding userid and auth0id to put request
    req.auth0Id=auth0Id as string;
    req.userId=user._id.toString();
-
    next();
   }catch(error){
     console.log(error);
