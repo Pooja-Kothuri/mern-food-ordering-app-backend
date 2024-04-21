@@ -3,7 +3,18 @@ import Restaurant from "../models/restaurant";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
 
-
+const getMyRestaurant=async(req:Request,res:Response)=>{
+  try{
+      const currentRestaurant=await Restaurant.findOne({user:req.userId});
+        if(!currentRestaurant){
+          return res.status(404).json({message:"Restaurant  not found"})
+        }
+        return res.json(currentRestaurant);
+  }catch(error){
+    console.log(error);
+    res.status(500).json({message:"error fetching restaurant"})
+  }
+}
 const createMyRestaurant=async (req:Request,res:Response)=>{  
   try{
     //if restaurant exits return else create
@@ -12,14 +23,14 @@ const createMyRestaurant=async (req:Request,res:Response)=>{
          return res.status(409).json({message:"User restaurant already exists."});
     } 
     //multer adds a file obj of the uploaded file to the request
-    const image= req.file as Express.Multer.File;//console.log(image);
-    const base64Image=Buffer.from(image.buffer).toString("base64");
-    const dataURI=`data:${image.mimetype};base64,${base64Image}`;//dataUri is used to embed into html 
-    const uploadResponse=await cloudinary.v2.uploader.upload(dataURI);//api response is given
+    // const image= req.file as Express.Multer.File;//console.log(image);
+    // const base64Image=Buffer.from(image.buffer).toString("base64");
+    // const dataURI=`data:${image.mimetype};base64,${base64Image}`;//dataUri is used to embed into html 
+    // const uploadResponse=await cloudinary.v2.uploader.upload(dataURI);//api response is given
     
-   
+   const imageUrl=await uploadImage(req.file as Express.Multer.File)
     const restaurant= new Restaurant(req.body);
-    restaurant.imageFile= uploadResponse.url;
+    restaurant.imageFile= imageUrl;
     restaurant.user=new mongoose.Types.ObjectId(req.userId);//creates a new user id based on provided id
     restaurant.lastUpdated=new Date();
     await restaurant.save();
@@ -31,7 +42,41 @@ const createMyRestaurant=async (req:Request,res:Response)=>{
   }
 };
 
+const updateMyRestaurant=async (req:Request,res:Response)=>{
+    try{
+      const restaurant=await Restaurant.findOne({
+        user:req.userId
+      });
+      if(!restaurant){
+        return res.status(404).json({message:"Restaurant not found..."})
+      }
+      restaurant.restaurantName=req.body.restaurantName;
+      restaurant.city=req.body.city;
+      restaurant.country=req.body.country;
+      restaurant.deliveryPrice=req.body.deliveryPrice;
+      restaurant.estimatedDeliveryTime=req.body.estimatedDeliveryTime;
+      restaurant.cuisines=req.body.cuisines; 
+      restaurant.menuItems=req.body.menuItems;
+      restaurant.lastUpdated=new Date();
+       if(req.file){
+        const imageUrl=await uploadImage(req.file as Express.Multer.File)
+        restaurant.imageFile=imageUrl;
+       }
+    await restaurant.save();
+    return res.status(200).send(restaurant)
+    }catch(error){
+      console.log(error);
+      return res.status(500).json({message:"Something went wrong"});
+    }
+}
+const uploadImage=async (file:Express.Multer.File)=>{
+  const image= file;
+  const base64Image=Buffer.from(image.buffer).toString("base64");
+  const dataURI=`data:${image.mimetype};base64,${base64Image}`;//dataUri is used to embed into html 
+  const uploadResponse=await cloudinary.v2.uploader.upload(dataURI);//api response is given
+  return uploadResponse.url;
+}
 export default {
-    createMyRestaurant,
+    createMyRestaurant,getMyRestaurant,updateMyRestaurant,
 }
 

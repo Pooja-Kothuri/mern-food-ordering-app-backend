@@ -7,7 +7,7 @@ import myUserRoute from "./routes/MyUserRoute"
 import myRestaurantRoute from "./routes/MyRestaurantRoute";
 import {v2 as cloudinary} from "cloudinary";
 import {Request,Response} from "express";
-
+import restaurantRoute from "./routes/RestaurantRoute"
 
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string).then(()=>console.log("connected to database!!")).catch((err)=>console.log(err, " connection failed.."))
  //process.env is used to get vlaue from .env file
@@ -35,7 +35,7 @@ app.get("/health",(req:Request,res:Response)=>{
 
 app.use("/api/my/user",myUserRoute);
 app.use("/api/my/restaurant",myRestaurantRoute)
-
+app.use("/api/restaurant/",restaurantRoute)
 app.listen(7000,()=>{
     console.log("server started at port 7000");
 })
