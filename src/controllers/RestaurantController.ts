@@ -1,5 +1,20 @@
 import {Request,Response} from "express";
 import Restaurant from "../models/restaurant";
+
+
+const getRestaurant=async(req:Request,res:Response)=>{
+        try{
+            const restaurantId=req.params.restaurantId;
+            const restaurant=await Restaurant.findById(restaurantId)
+            if(!restaurant){
+              return res.status(404).json({message:"restaurant not found"});
+            }
+            res.json(restaurant);
+        }catch(error){
+          console.log(error);
+    return res.status(500).json({message:"something went wrong"})
+        }
+}
 const searchRestaurant=async (req:Request,res:Response)=>{
   // console.log(req.query)
   try{
@@ -73,5 +88,5 @@ if(searchQuery){
 }
 
 export default {
-    searchRestaurant,
+    searchRestaurant,getRestaurant
 }
