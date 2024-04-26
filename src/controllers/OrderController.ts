@@ -5,7 +5,17 @@ import Order from "../models/Order";
 //order endpoints logic
 const STRIPE=new Stripe(process.env.STRIPE_API_KEY as string);
 const FRONTEND_URL=process.env.FRONTEND_URL as string; 
-const STRIPE_ENDPOINT_SECRET=process.env.STRIPE_ENDPOINT_SECRET as string;
+const STRIPE_ENDPOINT_SECRET=process.env.STRIPE_WEBHOOK_SECRET as string;
+
+const getMyOrders=async (req:Request,res:Response)=>{
+     try{
+      const orders=await Order.find({user:req.userId}).populate("restaurant").populate("user")
+      res.json(orders);
+     }catch(error){
+        console.log(error);
+        res.status(500).json({message:"something went wrong"});
+     }
+}
 type CheckoutSessionRequest={
     cartItems:{ //an array of objects
         menuItemId:string;
@@ -31,18 +41,17 @@ const stripeWebhookHandler=async(req:Request,res:Response)=>{
 //  res.send();//sending acknowledgement to stripe after successfully receiving event
 
 let event;
-try{
+try{ 
     const sig=req.headers["stripe-signature"];
     //below one works only if event is passed from stripe
     event=STRIPE.webhooks.constructEvent(req.body,sig as string,STRIPE_ENDPOINT_SECRET);
+    
     //stripe checks whether the request has come from stripe endpoint secret if so event is constructed
     //else error is thrown
     //this restrict any one from posting a request to webhook endpoint to make an order
 }catch(error:any){
-    console.log(error);
    return res.status(400).send(`Webhook error: ${error.message}`);
 }
-
 if(event.type=="checkout.session.completed"){
     const order=await Order.findById(event.data.object.metadata?.orderId);
     if(!order){
@@ -122,7 +131,7 @@ const createCheckoutSession=async (req:Request,res: Response)=>{
      );
      
      if(!restaurant){
-        throw new Error("Restaurant not fond");
+        throw new Error("Restaurant not found");
      }
 
      const newOrder=new Order({
@@ -144,6 +153,7 @@ const createCheckoutSession=async (req:Request,res: Response)=>{
         return res.status(500).json({message:"Error creating stripe session"});
     }
     await newOrder.save();//saving after  checkout session is successful
+    console.log(session.url);
     res.json({url:session.url});
     }catch(error:any){
          console.log(error);
@@ -155,5 +165,5 @@ const createCheckoutSession=async (req:Request,res: Response)=>{
 };
 
 export default{
-    createCheckoutSession,stripeWebhookHandler,
+    createCheckoutSession,stripeWebhookHandler,getMyOrders,
 }

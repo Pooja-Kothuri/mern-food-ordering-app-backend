@@ -26,7 +26,9 @@ MyRestaurantController.createMyRestaurant);
 
 router.get("/",jwtCheck,jwtParse,MyRestaurantController.getMyRestaurant)
 
-
+router.get("/order",jwtParse,MyRestaurantController.getMyRestaurantOrders);
+//patch -used to update part of entity
+router.patch("/order/:orderId/status",jwtCheck,jwtParse,MyRestaurantController.updateOrderStatus)
 router.put("/",
 upload.single("imageFile"),
 validateMyRestaurantRequest,
