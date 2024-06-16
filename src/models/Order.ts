@@ -17,7 +17,7 @@ const orderSchema=new mongoose.Schema({
             name:{type:String,required:true},
         }
      ],
-     totalAmount:Number,
+   
      status:{
         type:String,
         enum:[
@@ -25,6 +25,7 @@ const orderSchema=new mongoose.Schema({
         ],
 
      },
+     totalAmount:{type:Number},
      createdAt:{type:Date,default:Date.now},
 });
 const Order=mongoose.model("Order",orderSchema);

@@ -12,7 +12,7 @@ const getMyOrders=async (req:Request,res:Response)=>{
       const orders=await Order.find({user:req.userId}).populate("restaurant").populate("user")
       res.json(orders);
      }catch(error){
-        console.log(error);
+       
         res.status(500).json({message:"something went wrong"});
      }
 }
@@ -54,11 +54,13 @@ try{
 }
 if(event.type=="checkout.session.completed"){
     const order=await Order.findById(event.data.object.metadata?.orderId);
+   
     if(!order){
         return res.status(404).json({message:"order not found"});
     }
 
     order.totalAmount=event.data.object.amount_total;
+   
     order.status="paid",
     await order.save();
 }
@@ -126,6 +128,7 @@ const createCheckoutSession=async (req:Request,res: Response)=>{
 
     try{
      const checkoutSessionRequest:CheckoutSessionRequest=req.body;
+     console.log(checkoutSessionRequest)
      const restaurant=await Restaurant.findById(
         checkoutSessionRequest.restaurantId
      );
